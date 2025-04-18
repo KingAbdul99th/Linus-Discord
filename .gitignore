@@ -1,0 +1,12 @@
+__pycache__
+*.log
+.env
+.huggingface
+*.gguf
+voices
+*.pth
+*.gz
+*.wav
+data
+env
+XTTS-v2
