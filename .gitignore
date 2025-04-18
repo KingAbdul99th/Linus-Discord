@@ -11,3 +11,4 @@ data
 env
 XTTS-v2
 temp
+.pants.d
