@@ -9,7 +9,6 @@ import wave
 from discord import opus
 
 from models.linus_model import LinusModel
-from models.kcpp_client import generate_response
 
 
 class LinusClient(discord.Client):
@@ -42,7 +41,7 @@ class LinusClient(discord.Client):
 
         if message.content.startswith(f"<@{self.bot_user.id}>"):
             print(message.clean_content)
-            response = await generate_response(message)
+            response = await self.model.respond(message)
 
             await message.channel.send(response)
 

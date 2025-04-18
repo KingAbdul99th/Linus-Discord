@@ -24,6 +24,9 @@ class LinusModel:
         self.voice = "voices\\Arnold.wav"
         if llama_cpp:
             self._load_llamacpp_model()
+            self.respond = self.respond_llamacpp
+        else:
+            self.respond = generate_response
         
         self._load_tts_model()
 
@@ -50,9 +53,6 @@ class LinusModel:
         model.cuda()
         self.tts = model
         self.gpt_cond_latent, self.speaker_embedding = self.tts.get_conditioning_latents(audio_path=[self.voice])
-
-    def respond(self, message) -> str:
-        return generate_response(message)
 
     def respond_llamacpp(self, message: str) -> str:
         prompt = f"""
