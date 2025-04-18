@@ -20,19 +20,20 @@ torch.serialization.add_safe_globals([XttsArgs])
 
 
 class LinusModel:
-    def __init__(self, llama_cpp: bool = False) -> None:
-        self.voice = "voices\\Arnold.wav"
+    def __init__(self, llama_cpp: bool = False, enable_voice: bool = False) -> None:
+        self.voice = os.getenv("VOICE_PATH")
         if llama_cpp:
             self._load_llamacpp_model()
             self.respond = self.respond_llamacpp
         else:
             self.respond = generate_response
-        
-        self._load_tts_model()
+    
+        if enable_voice:
+            self._load_tts_model()
 
     def _load_llamacpp_model(self):
         self.llm = Llama(
-            model_path=os.path.join("gguf_models", "hermes-trismegistus-mistral-7b.Q4_K_M.gguf"),
+            model_path=os.getenv("LLM_MODEL_PATH"),
             main_gpu=0,
             n_gpu_layers=-1,
             n_batch=512,
@@ -42,8 +43,9 @@ class LinusModel:
 
     def _load_tts_model(self):
         print("Loading TTS model...")
+        model_path = os.getenv("XTTS_MODEL_PATH")
         config = XttsConfig()
-        config.load_json("XTTS-v2/config.json")
+        config.load_json(os.path.join(model_path, "config.json"))
         model = Xtts.init_from_config(config)
         model.load_checkpoint(
             config,
