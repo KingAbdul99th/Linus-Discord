@@ -1,21 +1,19 @@
 
 import asyncio
-
 from typing import Any
-import discord
-import io
-import wave
 
-from discord import opus
+import discord
 
 from models.linus_model import LinusModel
+
+
+XTTS_SAMPLE_RATE = 24000
 
 
 class LinusClient(discord.Client):
     def __init__(self, *, intents: discord.Intents, **options: Any) -> None:
         super().__init__(intents=intents, **options)
-        self.model = LinusModel()
-        self.encoder = opus.Encoder()
+        self.model = LinusModel(enable_voice=True)
         self.voice_client = None
 
     async def on_ready(self):
@@ -46,7 +44,7 @@ class LinusClient(discord.Client):
             await message.channel.send(response)
 
             if self.voice_client:
-                await self.play_response(response)
+                await self.play_response_stream(response)
             return
 
     async def initialize_voice_client(self, voice_channel_name):
@@ -57,29 +55,27 @@ class LinusClient(discord.Client):
     async def play_response_stream(self, text: str):
         print("playing voice")
 
-        audio = self.model.generate_voice_stream(text)
-        audio_buffer = io.BytesIO()
-        with wave.open(audio_buffer, "wb") as vfout:
-            vfout.setnchannels(1)
-            vfout.setsampwidth(2)
-            vfout.setframerate(24000)
-            vfout.writeframes(b"")
-        audio_buffer.seek(0)
+        stream_reader = self.model.generate_voice_stream(text)
+        ffmpeg_source = discord.FFmpegOpusAudio(
+            stream_reader,  # type: ignore # Pass our RawIOBase reader here (duck typing works)
+            pipe=True,
+            before_options=f"-f s16le -ac 1 -ar {XTTS_SAMPLE_RATE}",
+            options="-loglevel warning -vn",
+        )
+        
+        def after_play(error):
+            if error:
+                print(f"Error during TTS playback: {error}")
+            print("Playback finished or stopped. Closing TTS reader.")
+            if stream_reader:
+                stream_reader.close()
 
-        for i, chunk in enumerate(audio):
-            print(f"processing audio chunk {i}")
-            audio_buffer.write(chunk)
-            # encoded_bytes = self.encoder.encode(chunk, self.encoder.SAMPLES_PER_FRAME)
-            # print(encoded_bytes)
-            stream = await discord.FFmpegPCMAudio(chunk)
-            self.voice_client.send_audio_packet(stream, encode=False)
-            # if not self.voice_client.is_playing():
-            #     source = discord.FFmpegPCMAudio(source=audio_buffer, pipe=True)
-            #     volume_source = discord.PCMVolumeTransformer(source, volume=1)
-            #     self.voice_client.play(volume_source)
+        self.voice_client.play(ffmpeg_source, after=after_play)
+        print(
+            "Started voice_client.play() with FFmpegOpusAudio piping TTSStreamReader."  # Keep essential log
+        )
 
         print("Done playing voice")
-
 
     async def play_response(self, response):
         print("playing voice")
