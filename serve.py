@@ -18,7 +18,7 @@ def main():
     intents.members = True
     intents.presences = False
     intents.message_content = True
-    client = LinusClient(intents=intents, auto_connect_voice=True)
+    client = LinusClient(intents=intents)
 
     asyncio.run(client.start(os.getenv('DISCORD_BOT_TOKEN'), reconnect=True))
 

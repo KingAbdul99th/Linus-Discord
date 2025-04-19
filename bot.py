@@ -12,7 +12,7 @@ from models.linus_model import LinusModel
 
 
 class LinusClient(discord.Client):
-    def __init__(self, *, intents: discord.Intents, auto_connect_voice: bool = True, **options: Any) -> None:
+    def __init__(self, *, intents: discord.Intents, **options: Any) -> None:
         super().__init__(intents=intents, **options)
         self.model = LinusModel()
         self.encoder = opus.Encoder()
