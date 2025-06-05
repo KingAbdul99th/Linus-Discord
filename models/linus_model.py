@@ -111,8 +111,6 @@ class TTSStreamReader(io.RawIOBase):
             self._buffer = b""
         super().close()
 
-
-
 class LinusModel:
     def __init__(self, llama_cpp: bool = False, enable_voice: bool = False) -> None:
         self.voice = os.getenv("VOICE_PATH")

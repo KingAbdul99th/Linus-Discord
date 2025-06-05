@@ -1,6 +1,7 @@
 # Linus Discord bot
 Yet another LLM Discord bot
 
+Welp turns out discord.py has no viable way to get STT :'(
 # Install
 conda create -n linus python=3.12
 conda activate linus
